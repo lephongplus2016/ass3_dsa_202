@@ -20,3 +20,5 @@ To run testcase
 make all
 ./main testcase01
 ```
+## Reference
+Double hashing: [double hashing define](https://en.wikipedia.org/wiki/Double_hashing)
