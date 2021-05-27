@@ -3,6 +3,8 @@
 
 #include "main.h"
 
+class Node;
+
 class ReplacementPolicy
 {
 protected:
@@ -15,6 +17,11 @@ public:
 	virtual int remove() = 0;
 	virtual void print() = 0;
 
+	//moi them
+	int getCount()
+	{
+		return count;
+	}
 	bool isFull() { return count == MAXSIZE; }
 	bool isEmpty() { return count == 0; }
 	Elem *getValue(int idx) { return arr[idx]; }
@@ -28,11 +35,14 @@ public:
 
 class SearchEngine
 {
+
 public:
 	virtual int search(int key) = 0; // -1 if not found
-	virtual void insert(int key, Elem *e) = 0;
+	virtual void insert(int key, int idx) = 0;
 	virtual void deleteNode(int key) = 0;
 	virtual void print(ReplacementPolicy *r) = 0;
+	//moi them
+	virtual void InManHinh() = 0;
 };
 
 class FIFO : public ReplacementPolicy
@@ -44,15 +54,11 @@ public:
 		arr = new Elem *[MAXSIZE];
 	}
 	~FIFO() {}
-	int getCount()
-	{
-		return count;
-	}
 	int insert(Elem *e, int idx)
 	{
 		if (count == MAXSIZE)
 		{
-			return 0;
+			return -1;
 		}
 		else
 		{
@@ -81,6 +87,7 @@ public:
 	}
 	void print()
 	{
+
 		for (int i = 0; i < count; i++)
 			arr[i]->print();
 	}
@@ -118,7 +125,9 @@ class DBHashing : public SearchEngine
 public:
 	DBHashing(int (*h1)(int), int (*h2)(int), int s) {}
 	~DBHashing() {}
-	void insert(int key, Elem *e) {}
+	//to test
+	void InManHinh() {}
+	void insert(int key, int i) {}
 	void deleteNode(int key) {}
 	void print(ReplacementPolicy *q) {}
 	int search(int key) { return 0; }
@@ -127,8 +136,8 @@ public:
 class Node
 {
 public:
-	int key; // chinh la addr
-	Elem *ele;
+	int key;   // chinh la addr
+	int index; // trong arr trong rp
 	Node *left;
 	Node *right;
 	int height;
@@ -147,11 +156,11 @@ int max(int a, int b)
 	return (a > b) ? a : b;
 }
 
-Node *newNode(Elem *elem)
+Node *newNode(int addr, int index)
 {
 	Node *node = new Node();
-	node->key = elem->addr;
-	node->ele = elem;
+	node->key = addr;
+	node->index = index;
 	node->left = NULL;
 	node->right = NULL;
 	node->height = 1;
@@ -206,16 +215,16 @@ int getBalance(Node *N)
 		   height(N->right);
 }
 
-Node *insertNode(Node *node, Elem *ele)
+Node *insertNode(Node *node, int key, int index)
 {
 
 	if (node == NULL)
-		return (newNode(ele));
-	int key = ele->addr;
+		return (newNode(key, index));
+	//int key = ele->addr;
 	if (key < node->key)
-		node->left = insertNode(node->left, ele);
+		node->left = insertNode(node->left, key, index);
 	else if (key >= node->key) //neu bang day sang phai
-		node->right = insertNode(node->right, ele);
+		node->right = insertNode(node->right, key, index);
 	else
 		return node;
 
@@ -350,23 +359,47 @@ Node *searchNode(Node *root, int key)
 	return searchNode(root->left, key);
 }
 
-void preOrderAVL(Node *root)
+void updateIndexRecursive(Node *root)
 {
 	if (root != NULL)
 	{
-		root->ele->print();
-		preOrderAVL(root->left);
-		preOrderAVL(root->right);
+		root->index--;
+		updateIndexRecursive(root->left);
+		updateIndexRecursive(root->right);
 	}
 }
 
-void inOrderAVL(Node *root)
+void preOrderAVL(Node *root, ReplacementPolicy *q)
 {
 	if (root != NULL)
 	{
-		inOrderAVL(root->left);
-		root->ele->print();
-		inOrderAVL(root->right);
+		int index = root->index;
+		q->getValue(index)->print();
+		//root->ele->print();
+		preOrderAVL(root->left, q);
+		preOrderAVL(root->right, q);
+	}
+}
+
+void preOrder_test(Node *root)
+{
+	if (root != NULL)
+	{
+		cout << "index = " << root->index << " key= " << root->key << endl;
+		preOrder_test(root->left);
+		preOrder_test(root->right);
+	}
+}
+
+void inOrderAVL(Node *root, ReplacementPolicy *q)
+{
+	if (root != NULL)
+	{
+		inOrderAVL(root->left, q);
+		int index = root->index;
+		q->getValue(index)->print();
+		//root->ele->print();
+		inOrderAVL(root->right, q);
 	}
 }
 
@@ -379,11 +412,11 @@ void inOrderAVL(Node *root)
 //-- put function truyen vao addr->key, getData(tmp)-> i
 class AVL : public SearchEngine
 {
-	Elem **arr;
+private:
 	int p;
-	Node *avlRoot;
 
 public:
+	Node *avlRoot;
 	AVL()
 	{
 		//arr = new Elem *[MAXSIZE];
@@ -392,25 +425,35 @@ public:
 	}
 	~AVL()
 	{
-		delete[] arr;
+		//delete[] arr;
 	}
-	//change para
-	void insert(int key, Elem *e)
+	void InManHinh()
 	{
-		avlRoot = insertNode(avlRoot, e);
+		preOrder_test(this->avlRoot);
+	}
+
+	//change para
+	void insert(int key, int idx)
+	{
+		this->avlRoot = insertNode(avlRoot, key, idx);
+		//cout << "\navl ne: o file cache.h nhe dong 424: " << avlRoot->index << endl;
+		p++;
 	}
 	void deleteNode(int key)
 	{
 		avlRoot = deleteN(avlRoot, key);
+		p--;
+		updateIndex(); // sau khi xoa can phai cap nhat index cho dong bo voi arr trong rp
 	}
 	void print(ReplacementPolicy *q)
 	{
-		//RP
 
 		//INORDER
-		inOrderAVL(avlRoot);
+		cout << "Print AVL in inorder:\n";
+		inOrderAVL(avlRoot, q);
 		//PREORDER
-		preOrderAVL(avlRoot);
+		cout << "In AVL in preorder:\n";
+		preOrderAVL(avlRoot, q);
 	}
 	int search(int key)
 	{
@@ -421,8 +464,12 @@ public:
 		}
 		else
 		{
-			temp->ele->data;
+			return temp->index;
 		}
+	}
+	void updateIndex()
+	{
+		updateIndexRecursive(this->avlRoot);
 	}
 };
 
