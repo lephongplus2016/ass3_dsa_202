@@ -4,6 +4,19 @@
 #include "main.h"
 
 class Node;
+class NodeLFU;
+int parent(int i)
+{
+	return (i - 1) / 2;
+}
+int left(int i)
+{
+	return 2 * i + 1;
+}
+int right(int i)
+{
+	return 2 * i + 2;
+}
 
 class ReplacementPolicy
 {
@@ -27,6 +40,7 @@ public:
 	Elem *getValue(int idx) { return arr[idx]; }
 	void replace(int idx, Elem *e)
 	{
+		//access giong nhu 1 ham update lai index cho no vay
 		delete arr[idx];
 		access(idx);
 		arr[idx] = e;
@@ -64,7 +78,7 @@ public:
 		{
 			arr[idx] = e;
 			count++;
-			return 1;
+			return count;
 		}
 	}
 	void access(int idx) {}
@@ -112,9 +126,28 @@ public:
 class LFU : public ReplacementPolicy
 {
 public:
-	LFU() {}
+	Heap<NodeLFU> *minHeap = new Heap<NodeLFU>(MAXSIZE);
+	LFU()
+	{
+		count = 0;
+		arr = new Elem *[MAXSIZE];
+	}
 	~LFU() {}
-	int insert(Elem *e, int idx) { return 0; }
+	//cache se insert idx theo return cua insert
+	int insert(Elem *e, int idx)
+	{
+		if (count < MAXSIZE)
+		{
+			NodeLFU lfu(e);
+			minHeap->push(lfu);
+			count++;
+			return 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
 	void access(int idx) {}
 	int remove() { return 0; }
 	void print() {}
@@ -358,6 +391,14 @@ Node *searchNode(Node *root, int key)
 
 	return searchNode(root->left, key);
 }
+//for update for print
+void setNode(Node *node, int idx_new)
+{
+	if (node != NULL)
+	{
+		node->index = idx_new;
+	}
+}
 
 void updateIndexRecursive(Node *root)
 {
@@ -472,5 +513,233 @@ public:
 		updateIndexRecursive(this->avlRoot);
 	}
 };
+
+class NodeLFU
+{
+public:
+	int countLFU;
+	int addr;
+	Elem *e;
+	NodeLFU(Elem *e)
+	{
+		this->countLFU = 1;
+		this->addr = e->addr;
+		this->e = e;
+	}
+};
+
+template <class T>
+class Heap
+{
+protected:
+	T *elements;
+	int capacity;
+	int count;
+
+public:
+	Heap(int size)
+	{
+		this->capacity = size;
+		this->count = 0;
+		this->elements = new T[capacity];
+	}
+	~Heap()
+	{
+		delete[] elements;
+	}
+	int push(T item);
+	void printHeap()
+	{
+		cout << "Min Heap [ ";
+		for (int i = 0; i < count; i++)
+			cout << elements[i] << " ";
+		cout << "]";
+	}
+	//cau3
+	bool isEmpty();
+	bool contains(T item);
+	T peek();
+	bool pop();
+	int size();
+	//cau4
+	int getItem(T item);
+	void remove(T item);
+	void clear();
+
+private:
+	void ensureCapacity(int minCapacity);
+	void reheapUp(int position);
+	void reheapDown(int position);
+};
+
+// Your code here
+
+template <class T>
+int Heap<T>::push(T item)
+{
+	if (count == capacity)
+	{
+		ensureCapacity(count + 1);
+		capacity++;
+	}
+	if (count == 0)
+	{
+		elements[0] = item;
+		return 0;
+	}
+	else
+	{
+		int index = this->count;
+		elements[index] = item;
+		reheapUp(index);
+		return index;
+	}
+	count++;
+}
+
+template <class T>
+void Heap<T>::ensureCapacity(int minCapacity)
+{
+	T *newheap = new T[minCapacity];
+	for (int i = 0; i < count; i++)
+	{
+		newheap[i] = elements[i];
+	}
+	this->elements = newheap;
+}
+
+template <class T>
+void Heap<T>::reheapUp(int position)
+{
+	int p = (position - 1) / 2;
+	if (elements[p] > elements[position])
+	{
+		swap(elements[p], elements[position]);
+		reheapUp(p);
+	}
+}
+
+template <class T>
+int Heap<T>::size()
+{
+	return count;
+}
+
+template <class T>
+bool Heap<T>::isEmpty()
+{
+	return count == 0;
+}
+
+template <class T>
+T Heap<T>::peek()
+{
+	return this->elements[0];
+}
+
+template <class T>
+bool Heap<T>::contains(T item)
+{
+	for (int i = 0; i < count; i++)
+	{
+		if (elements[i] == item)
+			return true;
+	}
+	return false;
+}
+
+template <class T>
+bool Heap<T>::pop()
+{
+	if (count == 0)
+	{
+		return false;
+	}
+	vector<T> v;
+	for (int i = 0; i < count; i++)
+	{
+		v.push_back(elements[i]);
+	}
+	pop_heap(v.begin(), v.end());
+	v.pop_back();
+
+	for (int i = 0; i < count; i++)
+	{
+		elements[i] = v[i];
+	}
+	elements[count - 1] = 0;
+	count--;
+	return true;
+}
+
+//cau4
+// neu bang lay ben trai
+template <class T>
+void Heap<T>::reheapDown(int position)
+{
+	int l = left(position);
+	int r = right(position);
+	int largest = position;
+	if (l < count && r < count && elements[l] == elements[largest] && elements[r] == elements[largest])
+	{
+		largest = l;
+	}
+	else
+	{
+		if (l < count && elements[l] <= elements[largest])
+		{
+			largest = l;
+		}
+		if (r < count && elements[r] <= elements[largest])
+		{
+			largest = r;
+		}
+	}
+	if (largest != position)
+	{
+		swap(elements[largest], elements[position]);
+		reheapDown(largest);
+	}
+}
+
+template <class T>
+int Heap<T>::getItem(T item)
+{
+	// TODO: return the index of item in heap
+	for (int i = 0; i < count; i++)
+	{
+		if (elements[i] == item)
+			return i;
+	}
+	return -1;
+}
+
+template <class T>
+void Heap<T>::remove(T item)
+{
+	// TODO: remove the element with value equal to item
+	int index = getItem(item);
+	int last = count - 1;
+	if (count == 0)
+		return;
+	else if (index == last)
+	{
+		count--;
+	}
+	else if (index < last)
+	{
+		swap(elements[index], elements[last]);
+		count--;
+		reheapDown(index);
+	}
+}
+
+template <class T>
+void Heap<T>::clear()
+{
+	// TODO: delete all elements in heap
+	delete[] elements;
+	count = 0;
+}
 
 #endif

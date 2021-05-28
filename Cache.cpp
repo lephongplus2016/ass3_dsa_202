@@ -28,8 +28,8 @@ Elem *Cache::put(int addr, Data *cont)
         //them node
         Elem *e = new Elem(addr, cont, true);
         int idx = rp->getCount();
-        rp->insert(e, idx);
-        s_engine->insert(addr, idx);
+        int idx_new = rp->insert(e, idx);
+        s_engine->insert(addr, idx_new);
 
         return temp;
     }
@@ -37,10 +37,10 @@ Elem *Cache::put(int addr, Data *cont)
     { // not full
         Elem *temp = new Elem(addr, cont, true);
         int idx = rp->getCount();
-        rp->insert(temp, idx); //chinh la vi tri rong tiep theo can them
+        int idx_new = rp->insert(temp, idx); //chinh la vi tri rong tiep theo can them
         //them vao s_engine
         //rp->print();
-        s_engine->insert(addr, idx);
+        s_engine->insert(addr, idx_new);
         //s_engine->InManHinh();
         return NULL;
     }
@@ -67,8 +67,8 @@ Elem *Cache::write(int addr, Data *cont)
             //them node
             Elem *e = new Elem(addr, cont, false);
             int idx = rp->getCount();
-            rp->insert(e, idx);
-            s_engine->insert(addr, idx);
+            int idx_new = rp->insert(e, idx);
+            s_engine->insert(addr, idx_new);
 
             return temp;
         }
@@ -77,10 +77,10 @@ Elem *Cache::write(int addr, Data *cont)
             Elem *e = new Elem(addr, cont, false);
             int idx = rp->getCount();
 
-            rp->insert(e, idx); //chinh la vi tri rong tiep theo can them
+            int idx_new = rp->insert(e, idx); //chinh la vi tri rong tiep theo can them
             //them vao s_engine
             //rp->print();
-            s_engine->insert(addr, idx);
+            s_engine->insert(addr, idx_new);
             //s_engine->InManHinh();
         }
     }
