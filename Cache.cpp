@@ -7,10 +7,13 @@ Cache::~Cache()
 }
 Data *Cache::read(int addr)
 {
+    //tim theo key, tra ve theo index
+    s_engine->updateIndex(rp);
     //ko the tra trong rp, ma phai search trong e_engine
     int a = this->s_engine->search(addr);
     if (a != -1)
     {
+
         Data *temp = rp->getValue(a)->data;
         return temp;
     }
@@ -29,6 +32,7 @@ Elem *Cache::put(int addr, Data *cont)
         Elem *e = new Elem(addr, cont, true);
         int idx = rp->getCount();
         int idx_new = rp->insert(e, idx);
+
         s_engine->insert(addr, idx_new);
 
         return temp;
@@ -41,6 +45,7 @@ Elem *Cache::put(int addr, Data *cont)
         //them vao s_engine
         //rp->print();
         s_engine->insert(addr, idx_new);
+        cout << " insert node" << addr << " idx " << idx_new << endl;
         //s_engine->InManHinh();
         return NULL;
     }
@@ -50,6 +55,7 @@ Elem *Cache::put(int addr, Data *cont)
 //return elem* node vua xoa
 Elem *Cache::write(int addr, Data *cont)
 {
+    s_engine->updateIndex(rp);
     int idx = s_engine->search(addr);
     if (idx != -1)
     { //tim thay
@@ -93,5 +99,6 @@ void Cache::printRP()
 }
 void Cache::printSE()
 {
+    s_engine->updateIndex(rp);
     s_engine->print(rp);
 }
