@@ -15,6 +15,8 @@ Data *Cache::read(int addr)
     {
 
         Data *temp = rp->getValue(a)->data;
+        //cap nhat truy cap
+        rp->access(a, NULL);
         return temp;
     }
     return NULL;
@@ -34,6 +36,7 @@ Elem *Cache::put(int addr, Data *cont)
         int idx_new = rp->insert(e, idx);
 
         s_engine->insert(addr, idx_new);
+        //to test
 
         return temp;
     }
@@ -45,7 +48,7 @@ Elem *Cache::put(int addr, Data *cont)
         //them vao s_engine
         //rp->print();
         s_engine->insert(addr, idx_new);
-        cout << " insert node" << addr << " idx " << idx_new << endl;
+        //cout << " insert node" << addr << " idx " << idx_new << endl;
         //s_engine->InManHinh();
         return NULL;
     }
@@ -84,10 +87,8 @@ Elem *Cache::write(int addr, Data *cont)
             int idx = rp->getCount();
 
             int idx_new = rp->insert(e, idx); //chinh la vi tri rong tiep theo can them
-            //them vao s_engine
-            //rp->print();
+
             s_engine->insert(addr, idx_new);
-            //s_engine->InManHinh();
         }
     }
     return NULL;

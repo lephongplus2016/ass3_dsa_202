@@ -26,12 +26,10 @@ class NodeLFU
 public:
 	int countLFU;
 	int addr;
-	Elem *e;
-	NodeLFU(Elem *e)
+	NodeLFU(int addr)
 	{
 		this->countLFU = 1;
-		this->addr = e->addr;
-		this->e = e;
+		this->addr = addr;
 	}
 };
 
@@ -53,20 +51,13 @@ public:
 	{
 		delete[] elements;
 	}
-	int push(Elem *item);
+	int push(int addr);
 	void printHeap()
 	{
 		cout << "Min Heap [ ";
 		for (int i = 0; i < count; i++)
 			cout << elements[i]->countLFU << "-" << elements[i]->addr << " ";
 		cout << "]";
-	}
-	void printForRP()
-	{
-		for (int i = 0; i < count; i++)
-		{
-			this->elements[i]->e->print();
-		}
 	}
 	//coi co item nhu address
 	bool isEmpty();
@@ -75,10 +66,10 @@ public:
 	bool pop();
 	int size();
 	//cau4
-	Elem *getItem(int item);
-	Elem *getItemByIndex(int idx);
+	int getItemByAddr(int address);
+	int getItemByIndex(int idx);
 	void remove(int item);
-	int getItemIndex(int item);
+	//	int getItemIndex(int item);
 	//void clear();
 
 	//void ensureCapacity(int minCapacity);
@@ -89,22 +80,18 @@ public:
 
 // Your code here
 
-//for update to arr
-Elem *Heap::getItemByIndex(int idx)
+//for update to arr ->key
+int Heap::getItemByIndex(int idx)
 {
-	return elements[idx]->e;
+	return elements[idx]->addr;
 }
 
 //return index
-int Heap::push(Elem *item2)
+int Heap::push(int addr)
 {
-	NodeLFU *item = new NodeLFU(item2);
+	NodeLFU *item = new NodeLFU(addr);
 	int index = 0;
-	// if (count == capacity)
-	// {
-	//     ensureCapacity(count + 1);
-	//     capacity++;
-	// }
+
 	if (count == 0)
 	{
 		elements[0] = item;
@@ -212,33 +199,33 @@ void Heap::reheapDown(int position)
 	}
 }
 
-//get folow address
-Elem *Heap::getItem(int item)
+//get index folow address
+int Heap::getItemByAddr(int address)
 {
 	// TODO: return the index of item in heap
 	for (int i = 0; i < count; i++)
 	{
-		if (elements[i]->addr == item)
-			return elements[i]->e;
-	}
-	return NULL;
-}
-
-int Heap::getItemIndex(int item)
-{
-	// TODO: return the index of item in heap
-	for (int i = 0; i < count; i++)
-	{
-		if (elements[i]->addr == item)
+		if (elements[i]->addr == address)
 			return i;
 	}
 	return -1;
 }
 
+// int Heap::getItemIndex(int item)
+// {
+// 	// TODO: return the index of item in heap
+// 	for (int i = 0; i < count; i++)
+// 	{
+// 		if (elements[i]->addr == item)
+// 			return i;
+// 	}
+// 	return -1;
+// }
+
 void Heap::remove(int item)
 {
 	// TODO: remove the element with value equal to item
-	int index = getItemIndex(item);
+	int index = getItemByAddr(item);
 	int last = count - 1;
 	if (count == 0)
 		return;
@@ -263,7 +250,7 @@ void Heap::remove(int item)
 
 void Heap::updateCount(int key)
 {
-	int idx = getItemIndex(key);
+	int idx = getItemByAddr(key);
 	elements[idx]->countLFU++;
 	this->reheapDown(idx);
 }
@@ -297,8 +284,8 @@ public:
 	{
 		//access giong nhu 1 ham update lai index cho no vay
 		delete arr[idx];
-		access(idx, e);
 		arr[idx] = e;
+		access(idx, e);
 	}
 };
 
@@ -399,13 +386,19 @@ public:
 	{
 		if (count < MAXSIZE)
 		{
-			int index = minHeap->push(e);
-			count++;
 			if (minHeap->contains(e->addr))
 			{
 				minHeap->updateCount(e->addr);
 			}
+			int index = minHeap->push(e->addr);
+			//update truoc,insert sau
+			arr[index] = e;
+			count++;
+
 			updateFromHeapToArr();
+			//to test
+			//cout << " test o dong 403 cache.h" << endl;
+			//minHeap->printHeap();
 			return index;
 		}
 		else
@@ -416,10 +409,11 @@ public:
 	void access(int idx, Elem *e)
 	{
 		//xu ly khi write, moi chi replace arr, ko dong bo cho heap
-		Elem *temp = minHeap->getItemByIndex(idx);
-		temp = e;
-		minHeap->updateCount(temp->addr);
+		int key = minHeap->getItemByIndex(idx);
+		minHeap->updateCount(key);
 		updateFromHeapToArr();
+		//cout << " test o dong 417 cache.h" << endl;
+		//minHeap->printHeap();
 	}
 	//luon xoa node min
 	int remove()
@@ -427,30 +421,44 @@ public:
 		bool isRemove = minHeap->pop();
 		if (isRemove)
 		{
-			return 1;
 			updateFromHeapToArr();
+			count--;
+			return 1;
 		}
 		return 0;
 	}
 	void print()
 	{
-		minHeap->printForRP();
+		for (int i = 0; i < count; i++)
+		{
+			arr[i]->print();
+		}
+	}
+	//ham rieng
+	Elem *search(int key)
+	{
+		for (int i = 0; i < count; i++)
+		{
+			if (arr[i]->addr == key)
+				return arr[i];
+		}
+		return NULL;
 	}
 	//update lien tuc cho minheap-> arr
 	void updateFromHeapToArr()
 	{
+		Elem **arrTemp = new Elem *[MAXSIZE];
 		for (int i = 0; i < count; i++)
 		{
-			Elem *e = minHeap->getItemByIndex(i);
-			arr[i] = e;
+			int key = minHeap->getItemByIndex(i);
+			arrTemp[i] = this->search(key);
 		}
+		delete[] arr;
+		arr = arrTemp;
 	}
 	Elem *getValue(int idx)
 	{
 		//read cung lam thay doi heap
-		int key = arr[idx]->addr;
-		minHeap->updateCount(key);
-		updateFromHeapToArr();
 		return arr[idx];
 	}
 };
@@ -813,6 +821,7 @@ public:
 	}
 	void updateIndex(ReplacementPolicy *q)
 	{
+		q->updateFromHeapToArr();
 		int size = q->getCount();
 		int key = 0;
 		int idx = 0;
