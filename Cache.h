@@ -265,6 +265,7 @@ protected:
 public:
 	virtual int insert(Elem *e, int idx) = 0;  //insert e into arr[idx] if idx != -1 else into the position by replacement policy
 	virtual void access(int idx, Elem *e) = 0; //idx is index in the cache of the accessed element
+	//luon return ve key cua node can xoa
 	virtual int remove() = 0;
 	virtual void print() = 0;
 
@@ -329,17 +330,18 @@ public:
 	{ // luon xoa o dau
 		if (count == 0)
 		{
-			return 0;
+			return -1;
 		}
 		else
 		{
+			int key_to_remove = arr[0]->addr;
 			int last = count - 1;
 			for (int i = 0; i < last; i++)
 			{
 				arr[i] = arr[i + 1];
 			}
 			count--;
-			return 1;
+			return key_to_remove;
 		}
 	}
 	void print()
@@ -355,19 +357,80 @@ public:
 class MRU : public ReplacementPolicy
 {
 public:
-	MRU() {}
+	MRU()
+	{
+		count = 0;
+		arr = new Elem *[MAXSIZE];
+	}
 	~MRU() {}
-	int insert(Elem *e, int idx) { return 0; }
-	void access(int idx, Elem *e) {}
-	int remove() { return 0; }
-	void print() {}
+	int insert(Elem *e, int idx)
+	{
+		if (count == MAXSIZE)
+		{
+			return -1;
+		}
+		for (int i = count; i > 0; i--)
+		{
+			arr[i] = arr[i - 1];
+		}
+		arr[0] = e;
+		count++;
+		return 0;
+	}
+	void access(int idx, Elem *e)
+	{
+		updateByReadOrWriteChange(idx);
+	}
+	int remove()
+	{
+		if (count == 0)
+		{
+			return 0;
+		}
+		int key_to_remove = arr[0]->addr;
+		delete arr[0];
+		count--;
+		for (int i = 0; i < count; i++)
+		{
+			arr[i] = arr[i + 1];
+		}
+		return key_to_remove;
+	}
+	void print()
+	{
+		for (int i = 0; i < count; i++)
+		{
+			arr[i]->print();
+		}
+	}
 	void updateFromHeapToArr() {}
 	Elem *getValue(int idx) { return arr[idx]; }
+	//update khong thay doi count
+	void updateByReadOrWriteChange(int idxInLRU)
+	{
+		Elem *temp = arr[idxInLRU];
+		for (int i = idxInLRU; i > 0; i--)
+		{
+			arr[i] = arr[i - 1];
+		}
+		arr[0] = temp;
+	}
 };
 class LRU : public MRU
 {
 public:
-	int remove() override { return 0; }
+	int remove() override
+	{
+		if (count == 0)
+		{
+			return -1;
+		}
+		int key_to_remove = arr[count - 1]->addr;
+		delete arr[count - 1];
+		count--;
+
+		return key_to_remove;
+	}
 };
 
 class LFU : public ReplacementPolicy
@@ -423,9 +486,9 @@ public:
 		{
 			updateFromHeapToArr();
 			count--;
-			return 1;
+			return 0;
 		}
-		return 0;
+		return -1;
 	}
 	void print()
 	{
@@ -463,18 +526,173 @@ public:
 	}
 };
 
+//--------------------node for DBhash
+class NodeDB
+{
+public:
+	int key;
+	int index;
+	NodeDB(int key, int index)
+	{
+		this->key = key;
+		this->index = index;
+	}
+};
+
+enum STATUS_TYPE
+{
+	NIL,
+	NON_EMPTY,
+	DELETED
+};
+//--------------------end node for DBhash
+
 class DBHashing : public SearchEngine
 {
 public:
-	DBHashing(int (*h1)(int), int (*h2)(int), int s) {}
+	int (*h1)(int);
+	int (*h2)(int);
+	NodeDB **data;
+	int count;
+	int size;
+	STATUS_TYPE *status;
+	DBHashing(int (*h1)(int), int (*h2)(int), int s)
+	{
+		this->h1 = h1;
+		this->h2 = h2;
+		this->size = s;
+		this->count = 0;
+		this->data = new NodeDB *[size];
+		this->status = new STATUS_TYPE[size];
+		for (int i = 0; i < size; i++)
+		{
+			this->status[i] = NIL;
+		}
+	}
 	~DBHashing() {}
 	//to test
-	void updateIndex(ReplacementPolicy *r) {}
-	void InManHinh() {}
-	void insert(int key, int i) {}
-	void deleteNode(int key) {}
-	void print(ReplacementPolicy *q) {}
-	int search(int key) { return 0; }
+	void updateIndex(ReplacementPolicy *r)
+	{
+		r->updateFromHeapToArr();
+		int size1 = r->getCount();
+		int key = 0;
+		int idx = 0;
+		Elem *e;
+		for (int i = 0; i < size1; i++)
+		{
+			//tim nodebd theo index
+			e = r->getValue(i);
+			key = e->addr;
+			int slot = this->searchSlotByKey(key);
+			this->data[slot]->index = i;
+		}
+	}
+	void InManHinh()
+	{
+		cout << "Day la in man hinh tu 547 cacheh:" << endl;
+		for (int i = 0; i < size; i++)
+		{
+			if (status[i] == NON_EMPTY)
+			{
+				cout << "Tai index db " << i << "--key:" << data[i]->key << "--index that: " << data[i]->index << endl;
+			}
+		}
+	}
+	void insert(int key, int i)
+	{
+		int k = 0;
+		while (k < size)
+		{
+			int slot = doubleHashing(key, k);
+			if (status[slot] == NIL || status[slot] == DELETED)
+			{
+				NodeDB *temp = new NodeDB(key, i);
+				data[slot] = temp;
+				status[slot] = NON_EMPTY;
+				count++;
+				return;
+			}
+			k++;
+		}
+	}
+	void deleteNode(int key)
+	{
+		int slot = searchSlotByKey(key);
+		if (slot == -1)
+			return;
+		delete data[slot];
+		data[slot] = NULL;
+		status[slot] = DELETED;
+		count--;
+	}
+	void print(ReplacementPolicy *q)
+	{
+		for (int i = 0; i < this->size; i++)
+		{
+			if (status[i] == NON_EMPTY)
+			{
+				int idx = data[i]->index;
+				q->getValue(idx)->print();
+			}
+		}
+	}
+	//return index real
+	int search(int key)
+	{
+		int i = 0;
+		while (i < size)
+		{
+			int slot = doubleHashing(key, i);
+			if (status[slot] == NIL)
+			{
+				return -1;
+			}
+			else if (status[slot] == DELETED)
+			{
+				i++;
+				continue;
+			}
+			else
+			{
+				if (data[slot]->key == key)
+					return data[slot]->index;
+			}
+			i++;
+		}
+		return -1;
+	}
+
+	//ham rieng
+	int doubleHashing(int key, int i)
+	{
+		int a1 = this->h1(key);
+		int a2 = this->h2(key);
+		return (a1 + i * a2) % size;
+	}
+	int searchSlotByKey(int key)
+	{
+		int i = 0;
+		while (i < size)
+		{
+			int slot = doubleHashing(key, i);
+			if (status[slot] == NIL)
+			{
+				return -1;
+			}
+			else if (status[slot] == DELETED)
+			{
+				i++;
+				continue;
+			}
+			else
+			{
+				if (data[slot]->key == key)
+					return slot;
+			}
+			i++;
+		}
+		return -1;
+	}
 };
 //--------------implement avl -node ------------------
 class Node
