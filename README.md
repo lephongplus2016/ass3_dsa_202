@@ -23,7 +23,7 @@ To run testcase
 
 ```C++
 make all
-./main testcase01
+./main test1.txt
 ```
 
 ## Reference
