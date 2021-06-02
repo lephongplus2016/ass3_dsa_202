@@ -2,8 +2,8 @@
 Cache::Cache(SearchEngine *s, ReplacementPolicy *r) : rp(r), s_engine(s) {}
 Cache::~Cache()
 {
-    delete rp;
-    delete s_engine;
+    //delete rp;
+    //delete s_engine;
 }
 Data *Cache::read(int addr)
 {
@@ -37,8 +37,8 @@ Elem *Cache::put(int addr, Data *cont)
 
         s_engine->insert(addr, idx_new);
         //to test
-        // cout << "test tai 40 cache.cpp\n ";
-        // s_engine->InManHinh();
+        //cout << "test tai 40 cache.cpp\n ";
+        //s_engine->InManHinh();
         return temp;
     }
     else
@@ -49,8 +49,8 @@ Elem *Cache::put(int addr, Data *cont)
         //them vao s_engine
         //rp->print();
         s_engine->insert(addr, idx_new);
-        // cout << " insert node" << addr << " idx " << idx_new << endl;
-        // s_engine->InManHinh();
+        //cout << " insert node" << addr << " idx " << idx_new << endl;
+        //s_engine->InManHinh();
         return NULL;
     }
 }
@@ -69,14 +69,6 @@ Elem *Cache::write(int addr, Data *cont)
     else                  //temp->delete , e->insert
     {                     //khong tim thay, tao node moi
         if (rp->isFull()) //neu full
-                          //
-                          //
-                          //
-                          //
-                          //
-                          //
-                          //
-        //co van de
         {
             Elem *temp = rp->getValue(0);
             int addr_t = rp->remove();
@@ -88,7 +80,9 @@ Elem *Cache::write(int addr, Data *cont)
             int idx = rp->getCount();
             int idx_new = rp->insert(e, idx);
             s_engine->insert(addr, idx_new);
-
+            //test
+            //cout << " insert node" << addr << " idx " << idx_new << endl;
+            //s_engine->InManHinh();
             return temp;
         }
         else
@@ -100,8 +94,8 @@ Elem *Cache::write(int addr, Data *cont)
 
             s_engine->insert(addr, idx_new);
             //test
-            // cout << " insert node" << addr << " idx " << idx_new << endl;
-            // s_engine->InManHinh();
+            //cout << " insert node" << addr << " idx " << idx_new << endl;
+            //s_engine->InManHinh();
         }
     }
     return NULL;

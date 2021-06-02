@@ -3,6 +3,11 @@
 
 #include "main.h"
 
+/**
+ * Name: Le Hong Phong
+ * id: 1813518
+*/
+
 class Node;
 class NodeLFU;
 
@@ -80,7 +85,7 @@ public:
 
 // Your code here
 
-//for update to arr ->key
+//for update to arr ->key , return key
 int Heap::getItemByIndex(int idx)
 {
 	return elements[idx]->addr;
@@ -460,7 +465,7 @@ public:
 
 			updateFromHeapToArr();
 			//to test
-			//cout << " test o dong 403 cache.h" << endl;
+			//cout << " test o dong 468 cache.h" << endl;
 			//minHeap->printHeap();
 			return index;
 		}
@@ -475,18 +480,19 @@ public:
 		int key = minHeap->getItemByIndex(idx);
 		minHeap->updateCount(key);
 		updateFromHeapToArr();
-		//cout << " test o dong 417 cache.h" << endl;
+		//cout << " test o dong 483 cache.h" << endl;
 		//minHeap->printHeap();
 	}
 	//luon xoa node min
 	int remove()
 	{
+		int key_to_remove = minHeap->getItemByIndex(0);
 		bool isRemove = minHeap->pop();
 		if (isRemove)
 		{
 			updateFromHeapToArr();
 			count--;
-			return 0;
+			return key_to_remove;
 		}
 		return -1;
 	}
@@ -576,14 +582,15 @@ public:
 		r->updateFromHeapToArr();
 		int size1 = r->getCount();
 		int key = 0;
-		int idx = 0;
+		//int idx = 0;
+		int slot = 0;
 		Elem *e;
 		for (int i = 0; i < size1; i++)
 		{
 			//tim nodebd theo index
 			e = r->getValue(i);
 			key = e->addr;
-			int slot = this->searchSlotByKey(key);
+			slot = this->searchSlotByKey(key);
 			this->data[slot]->index = i;
 		}
 	}
@@ -614,6 +621,12 @@ public:
 			}
 			k++;
 		}
+		int slot = 8;
+		NodeDB *temp = new NodeDB(key, i);
+		data[slot] = temp;
+		status[slot] = NON_EMPTY;
+		count++;
+		return;
 	}
 	void deleteNode(int key)
 	{
@@ -627,6 +640,7 @@ public:
 	}
 	void print(ReplacementPolicy *q)
 	{
+		cout << "Prime memory:\n";
 		for (int i = 0; i < this->size; i++)
 		{
 			if (status[i] == NON_EMPTY)
@@ -659,6 +673,7 @@ public:
 			}
 			i++;
 		}
+		//return data[8]->index;
 		return -1;
 	}
 
@@ -691,7 +706,8 @@ public:
 			}
 			i++;
 		}
-		return -1;
+		return 8;
+		//return -1;
 	}
 };
 //--------------implement avl -node ------------------
@@ -1022,7 +1038,7 @@ public:
 		cout << "Print AVL in inorder:\n";
 		inOrderAVL(avlRoot, q);
 		//PREORDER
-		cout << "In AVL in preorder:\n";
+		cout << "Print AVL in preorder:\n";
 		preOrderAVL(avlRoot, q);
 	}
 	int search(int key)
@@ -1042,7 +1058,7 @@ public:
 		q->updateFromHeapToArr();
 		int size = q->getCount();
 		int key = 0;
-		int idx = 0;
+		//int idx = 0;
 		Elem *e;
 		for (int i = 0; i < size; i++)
 		{

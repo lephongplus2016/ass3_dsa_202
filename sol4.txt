@@ -1,0 +1,29 @@
+12
+20
+20
+30
+Print replacement buffer
+6 42 false
+10 30 false
+8 12 false
+7 30 false
+5 40 false
+3 20 false
+4 20 true
+Print search buffer
+Print AVL in inorder:
+3 20 false
+4 20 true
+5 40 false
+6 42 false
+7 30 false
+8 12 false
+10 30 false
+Print AVL in preorder:
+5 40 false
+3 20 false
+4 20 true
+8 12 false
+7 30 false
+6 42 false
+10 30 false
