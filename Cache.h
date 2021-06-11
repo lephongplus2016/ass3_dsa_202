@@ -112,16 +112,6 @@ int Heap::push(int addr)
 	return index;
 }
 
-// void Heap::ensureCapacity(int minCapacity)
-// {
-//     int *newheap = new int[minCapacity];
-//     for (int i = 0; i < count; i++)
-//     {
-//         newheap[i] = elements[i];
-//     }
-//     this->elements = newheap;
-// }
-
 void Heap::reheapUp(int position)
 {
 	int p = (position - 1) / 2;
@@ -216,17 +206,6 @@ int Heap::getItemByAddr(int address)
 	return -1;
 }
 
-// int Heap::getItemIndex(int item)
-// {
-// 	// TODO: return the index of item in heap
-// 	for (int i = 0; i < count; i++)
-// 	{
-// 		if (elements[i]->addr == item)
-// 			return i;
-// 	}
-// 	return -1;
-// }
-
 void Heap::remove(int item)
 {
 	// TODO: remove the element with value equal to item
@@ -245,13 +224,6 @@ void Heap::remove(int item)
 		reheapDown(index);
 	}
 }
-
-// void Heap::clear()
-// {
-//     // TODO: delete all elements in heap
-//     delete[] elements;
-//     count = 0;
-// }
 
 void Heap::updateCount(int key)
 {
@@ -591,6 +563,10 @@ public:
 			e = r->getValue(i);
 			key = e->addr;
 			slot = this->searchSlotByKey(key);
+			if (slot == -1)
+			{
+				continue;
+			}
 			this->data[slot]->index = i;
 		}
 	}
@@ -621,11 +597,6 @@ public:
 			}
 			k++;
 		}
-		int slot = 8;
-		NodeDB *temp = new NodeDB(key, i);
-		data[slot] = temp;
-		status[slot] = NON_EMPTY;
-		count++;
 		return;
 	}
 	void deleteNode(int key)
@@ -650,7 +621,7 @@ public:
 			}
 		}
 	}
-	//return index real
+
 	int search(int key)
 	{
 		int i = 0;
@@ -673,7 +644,6 @@ public:
 			}
 			i++;
 		}
-		//return data[8]->index;
 		return -1;
 	}
 
@@ -706,8 +676,7 @@ public:
 			}
 			i++;
 		}
-		return 8;
-		//return -1;
+		return -1;
 	}
 };
 //--------------implement avl -node ------------------

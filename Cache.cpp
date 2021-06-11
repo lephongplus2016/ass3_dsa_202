@@ -36,9 +36,7 @@ Elem *Cache::put(int addr, Data *cont)
         int idx_new = rp->insert(e, idx);
 
         s_engine->insert(addr, idx_new);
-        //to test
-        //cout << "test tai 40 cache.cpp\n ";
-        //s_engine->InManHinh();
+
         return temp;
     }
     else
@@ -46,11 +44,9 @@ Elem *Cache::put(int addr, Data *cont)
         Elem *temp = new Elem(addr, cont, true);
         int idx = rp->getCount();
         int idx_new = rp->insert(temp, idx); //chinh la vi tri rong tiep theo can them
-        //them vao s_engine
-        //rp->print();
+
         s_engine->insert(addr, idx_new);
-        //cout << " insert node" << addr << " idx " << idx_new << endl;
-        //s_engine->InManHinh();
+
         return NULL;
     }
 }
@@ -80,9 +76,7 @@ Elem *Cache::write(int addr, Data *cont)
             int idx = rp->getCount();
             int idx_new = rp->insert(e, idx);
             s_engine->insert(addr, idx_new);
-            //test
-            //cout << " insert node" << addr << " idx " << idx_new << endl;
-            //s_engine->InManHinh();
+
             return temp;
         }
         else
@@ -93,9 +87,6 @@ Elem *Cache::write(int addr, Data *cont)
             int idx_new = rp->insert(e, idx); //chinh la vi tri rong tiep theo can them
 
             s_engine->insert(addr, idx_new);
-            //test
-            //cout << " insert node" << addr << " idx " << idx_new << endl;
-            //s_engine->InManHinh();
         }
     }
     return NULL;
